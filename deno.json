@@ -1,0 +1,23 @@
+{
+    "tasks": {
+      "test": "deno test --allow-all",
+      "test:watch": "deno test --watch --allow-all",
+      "fmt": "deno fmt",
+      "fmt:check": "deno fmt --check",
+      "lint": "deno lint",
+      "check": "deno check **/*.ts",
+      "agent":"deno run -A ./src/app.ts"
+    },
+    "fmt": {
+      "include": ["src/", "tests/","examples/", "*.ts"],
+      "exclude": ["coverage/"],
+      "singleQuote": true,
+      "lineWidth": 120
+    },
+    "lint": {
+      "include": ["src/", "tests/", "*.ts"]
+    },
+    "imports": {
+      "@std/assert": "jsr:@std/assert@^1.0.13"
+    }
+  }
