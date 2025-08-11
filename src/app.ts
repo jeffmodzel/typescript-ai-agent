@@ -1,4 +1,4 @@
-import { SequentialStateMachine } from './sequential-state-machine.ts';
+import { SequentialStateMachine } from './sequential_state_machine.ts';
 
 if (import.meta.main) {
   console.log(import.meta.filename);
@@ -55,4 +55,5 @@ if (import.meta.main) {
 
   // do we need to check return
   await machine.start(initialContext);
+
 }

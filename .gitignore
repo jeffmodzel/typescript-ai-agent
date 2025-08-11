@@ -15,3 +15,5 @@ dist/
 build/
 # Log files
 *.log
+
+secret.txt
