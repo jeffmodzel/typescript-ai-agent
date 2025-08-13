@@ -50,7 +50,7 @@ if (import.meta.main) {
           const RESET = '\x1b[0m';
           const message = new TextEncoder().encode(`\n${BRIGHT_GREEN}You: ${RESET}`);
           await Deno.stdout.write(message);
-          const input = await getInput();
+          const input = await getInput(true);
 
           if (isString(input) && input.trim().length > 0) {
             context.userInput = input;

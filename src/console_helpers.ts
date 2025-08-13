@@ -9,12 +9,18 @@ export const getInput = async (debug: boolean = false): Promise<string | undefin
   //   debug && console.log(`[getInput()]:[text]=${text}`);
   //   return text.trim();
   // }
-  const buffer = new Uint8Array(1024); // does this blow out?
+  const BUFFER_SIZE = 1024;
+  const buffer = new Uint8Array(BUFFER_SIZE); // this will truncate input longer than BUFFER_SIZE
   const n = await Deno.stdin.read(buffer);
   if (n === null) return undefined;
+  if (n === BUFFER_SIZE) {
+    throw new Error(`Input too long, max ${BUFFER_SIZE} bytes`);
+  }
 
   const text = new TextDecoder().decode(buffer.subarray(0, n));
   debug && console.log(`[getInput()]:[text]=${text}`);
+  debug && console.log(`[getInput()]:[n]=${n}`);
+
   return text.trim();
 };
 
