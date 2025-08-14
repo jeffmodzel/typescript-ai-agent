@@ -1,5 +1,8 @@
+import Anthropic from '@anthropic-ai/sdk';
 import { SequentialStateMachine } from './sequential_state_machine.ts';
 import { getInput, isString } from './console_helpers.ts';
+import { MachineStates, MachineContext } from './machine_configuration.ts';
+import { AgentProcessStateConfig } from './state_configurations.ts';
 
 if (import.meta.main) {
   console.log(import.meta.filename);
@@ -7,11 +10,12 @@ if (import.meta.main) {
   //
   // State machine configuration
   //
-  type MachineStates = 'Initialize' | 'PromptUser' | 'AgentProcess' | 'Error' | 'Complete';
-  type MachineContext = {
-    error?: unknown;
-    userInput: string;
-  };
+  // type MachineStates = 'Initialize' | 'PromptUser' | 'AgentProcess' | 'Error' | 'Complete';
+  // type MachineContext = {
+  //   error?: unknown;
+  //   userInput: string;
+  //   client?: Anthropic;
+  // };
 
   const machine = new SequentialStateMachine<MachineStates, MachineContext>('Initialize');
   const initialContext: MachineContext = { userInput: '' };
@@ -27,7 +31,8 @@ if (import.meta.main) {
           throw new Error('The ANTHROPIC_API_KEY environment variable is not set.');
         }
 
-        //new up anthropic client
+        // anthropic client
+        context.client = new Anthropic({ apiKey });
       } catch (error) {
         context.error = error;
         return { transitionTo: 'Error', context };
@@ -50,9 +55,14 @@ if (import.meta.main) {
           const RESET = '\x1b[0m';
           const message = new TextEncoder().encode(`\n${BRIGHT_GREEN}You: ${RESET}`);
           await Deno.stdout.write(message);
-          const input = await getInput(true);
+          const input = await getInput();
+          // end hack
 
           if (isString(input) && input.trim().length > 0) {
+            if (['q','quit','exit'].includes(input.trim().toLowerCase())) {
+              console.log('\nExiting...');
+              return { transitionTo: 'Complete', context };
+            }
             context.userInput = input;
             return { transitionTo: 'AgentProcess', context };
           }
@@ -67,20 +77,10 @@ if (import.meta.main) {
         return { transitionTo: 'Error', context };
       }
     },
-    transitions: ['AgentProcess', 'Error','Complete'],
+    transitions: ['AgentProcess', 'Error', 'Complete'],
   });
 
-  machine.addState('AgentProcess', {
-    onEnter: async (context) => {
-      debug && console.log('[AgentProcess]');
-
-      console.log(`%cAgent - Send this text to Anthropic: ${context.userInput}`, 'color: #00FFFF;');
-      // wait for response, dump to screen, transition back to PromptUser
-
-      return { transitionTo: 'Complete', context };
-    },
-    transitions: ['Complete'],
-  });
+  machine.addState('AgentProcess', AgentProcessStateConfig);
 
   machine.addState('Error', {
     onEnter: async (context) => {
