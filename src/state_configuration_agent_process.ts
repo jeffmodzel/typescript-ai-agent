@@ -65,7 +65,7 @@ export const AgentProcessStateConfig: StateConfig<MachineStates, MachineContext>
 export const DisplayCurrentStateStateConfig: StateConfig<MachineStates, MachineContext> = {
   onEnter: async (context) => {
     debug && console.log('%c\n[DisplayCurrentState]', 'color: #0000FF;');
-
+    
     try {
       console.log(`%c\ncontext.messages.length is ${context.messages.length}`, 'color: #0000FF;');
       if (context.lastResponse) {
