@@ -17,3 +17,9 @@ SET ANTHROPIC_API_KEY=1234567890qwerty
 https://docs.anthropic.com/en/api/client-sdks
 
 https://github.com/anthropics/anthropic-sdk-typescript
+
+
+# TODO
+
+Maybe have a state for "debug" where we dump info about current context, metadata about anthropic api, etc
+need to press Y to contiue....maybe for troubleshooting?

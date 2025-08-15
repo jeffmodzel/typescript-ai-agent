@@ -2,27 +2,19 @@ import Anthropic from '@anthropic-ai/sdk';
 import { SequentialStateMachine } from './sequential_state_machine.ts';
 import { getInput, isString } from './console_helpers.ts';
 import { MachineStates, MachineContext } from './machine_configuration.ts';
-import { AgentProcessStateConfig } from './state_configurations.ts';
+import { AgentProcessStateConfig, DisplayCurrentStateStateConfig } from './state_configuration_agent_process.ts';
+import { CompleteStateConfig, ErrorStateConfig } from './state_configurations.ts';
+import { CLAUDE_3_5_HAIKU_LATEST } from './anthropic_helpers.ts';
 
 if (import.meta.main) {
   console.log(import.meta.filename);
-  const debug = false;
-  //
-  // State machine configuration
-  //
-  // type MachineStates = 'Initialize' | 'PromptUser' | 'AgentProcess' | 'Error' | 'Complete';
-  // type MachineContext = {
-  //   error?: unknown;
-  //   userInput: string;
-  //   client?: Anthropic;
-  // };
-
+  const debug = true;
   const machine = new SequentialStateMachine<MachineStates, MachineContext>('Initialize');
-  const initialContext: MachineContext = { userInput: '' };
+  const initialContext: MachineContext = { userInput: '', messages: [], claudeModel: CLAUDE_3_5_HAIKU_LATEST };
 
   machine.addState('Initialize', {
     onEnter: async (context) => {
-      debug && console.log('[Initialize]');
+      debug && console.log('%c\n[Initialize]','color: #0000FF;');
 
       try {
         const apiKey = Deno.env.get('ANTHROPIC_API_KEY');
@@ -33,6 +25,7 @@ if (import.meta.main) {
 
         // anthropic client
         context.client = new Anthropic({ apiKey });
+        console.log(`\nUsing Anthropic model: ${context.claudeModel}`);
       } catch (error) {
         context.error = error;
         return { transitionTo: 'Error', context };
@@ -45,7 +38,8 @@ if (import.meta.main) {
 
   machine.addState('PromptUser', {
     onEnter: async (context) => {
-      debug && console.log('[PromptUser]');
+      debug && console.log('%c\n[PromptUser]','color: #0000FF;');
+      debug && console.log('%cType "q" to quit','color: #0000FF;');
 
       let counter = 0;
       try {
@@ -81,25 +75,9 @@ if (import.meta.main) {
   });
 
   machine.addState('AgentProcess', AgentProcessStateConfig);
-
-  machine.addState('Error', {
-    onEnter: async (context) => {
-      console.log('%cAn error occurred in the app', 'color: red;');
-      if (context.error) {
-        console.error(context.error);
-      }
-      return { context };
-    },
-    transitions: [],
-  });
-
-  machine.addState('Complete', {
-    onEnter: async (context) => {
-      debug && console.log('[Complete]');
-      return { context };
-    },
-    transitions: [],
-  });
+  machine.addState('DisplayCurrentState', DisplayCurrentStateStateConfig);
+  machine.addState('Error', ErrorStateConfig);
+  machine.addState('Complete', CompleteStateConfig);
 
   // do we need to check return
   await machine.start(initialContext);
