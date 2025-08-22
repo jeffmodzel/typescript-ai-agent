@@ -1,12 +1,15 @@
 import { StateConfig } from './sequential_state_machine.ts';
 import { MachineContext, MachineStates } from './machine_configuration.ts';
 import { getResponseText } from './anthropic_helpers.ts';
+import { weatherTool, getWeatherForecast } from './tools.ts';
 
 const debug = true;
 
 export const AgentProcessStateConfig: StateConfig<MachineStates, MachineContext> = {
   onEnter: async (context) => {
     debug && console.log('%c\n[AgentProcess]', 'color: #0000FF;');
+    debug && console.log(`%c context.userInput=${context.userInput}', 'color: #0000FF;`);
+    
 
     try {
       if (!context.client) {
@@ -25,6 +28,7 @@ export const AgentProcessStateConfig: StateConfig<MachineStates, MachineContext>
         max_tokens: 1024,
         messages: context.messages,
         model: context.claudeModel, //claude-sonnet-4-20250514
+        tools: [weatherTool],
       });
       context.lastResponse = message;
 
@@ -41,12 +45,43 @@ export const AgentProcessStateConfig: StateConfig<MachineStates, MachineContext>
       });
       console.log('%c\nClaude: ', 'color: #00FFFF;', `${responseText}`);
 
-      if (message.content.length > 1) {
-        console.log(
-          `%c\nWarning: message.content.length is ${message.content.length}.Displaying below:`,
-          'color: #FFFF00;',
-        );
-        console.log(message.content);
+      // Loop thrugh all content blocks and deal with any that aren't text
+      // Text was handled above with getResponseText()
+
+      for (const block of message.content) {
+        if (block.type === 'tool_use') {
+          console.log('%c\nTool use detected:', 'color: #FF00FF;');
+          console.log(block);
+          const toolName = block.name;
+          const toolInput = block.input;
+          const toolId = block.id;
+
+          if (toolName === 'get_weather_forecast') {
+            console.log('%c\nWeather tool detected:', 'color: #FF00FF;');
+            console.log(toolInput);
+            const input = toolInput as { zipcode: string };
+            const weatherForecast = await getWeatherForecast(input);
+            console.log('%c\nWeather forecast:', 'color: #FF00FF;');
+            console.log(weatherForecast);
+            // context.messages.push({
+            //    role: 'user',
+            //    content: weatherForecast,
+               
+            //  });
+            //context.userInput = weatherForecast; // Update userInput with the weather forecast response
+
+            context.userInput = `Please summarize this weather forecast: ${weatherForecast}`; // Update userInput with the weather forecast response
+
+            return { transitionTo: 'AgentProcess', context };
+          } else {
+            console.log(`%c\nUnknown tool detected: ${toolName}`, 'color: #FFFF00;');
+          }
+
+        } else if (block.type === 'text') {
+          continue; // Already handled by getResponseText()
+        } else {
+          console.log(`%c\nWarning: Unhandled block.type: ${block.type}`, 'color: #FFFF00;');
+        }
       }
 
       if (debug) {
@@ -59,13 +94,13 @@ export const AgentProcessStateConfig: StateConfig<MachineStates, MachineContext>
       return { transitionTo: 'Error', context };
     }
   },
-  transitions: ['PromptUser', 'Complete', 'Error', 'DisplayCurrentState'],
+  transitions: ['PromptUser', 'Complete', 'Error', 'DisplayCurrentState','AgentProcess'],
 };
 
 export const DisplayCurrentStateStateConfig: StateConfig<MachineStates, MachineContext> = {
   onEnter: async (context) => {
     debug && console.log('%c\n[DisplayCurrentState]', 'color: #0000FF;');
-    
+
     try {
       console.log(`%c\ncontext.messages.length is ${context.messages.length}`, 'color: #0000FF;');
       if (context.lastResponse) {

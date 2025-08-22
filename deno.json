@@ -6,7 +6,8 @@
       "fmt:check": "deno fmt --check",
       "lint": "deno lint",
       "check": "deno check **/*.ts",
-      "agent":"deno run -A ./src/app.ts"
+      "agent":"deno run -A ./src/app.ts",
+      "weather_test":"deno run -A ./src/dev/run_weather.ts"
     },
     "fmt": {
       "include": ["src/", "tests/","examples/", "*.ts"],
