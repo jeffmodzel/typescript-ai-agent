@@ -13,14 +13,14 @@ export class WeatherGovApi {
       if (data && data.properties && 'forecast' in data.properties) {
         const response = await fetch(data.properties.forecast);
         const forecastObj = await response.json();
-        console.log(forecastObj);
+        //console.log(forecastObj);
         if (
           forecastObj && forecastObj.properties && forecastObj.properties.periods &&
           Array.isArray(forecastObj.properties.periods) && forecastObj.properties.periods.length > 0
         ) {
           forecast = '';
           for (const period of forecastObj.properties.periods) {
-            console.log(period);
+            //console.log(period);
             forecast += `Period ${period.number}, ${period.name}, periodStart: ${period.startTime}, periodEnd: ${period.endTime}`;
             forecast += `, Forecast: ${period.detailedForecast}`;
             

@@ -8,9 +8,8 @@ const debug = true;
 export const AgentProcessStateConfig: StateConfig<MachineStates, MachineContext> = {
   onEnter: async (context) => {
     debug && console.log('%c\n[AgentProcess]', 'color: #0000FF;');
-    debug && console.log(`%c context.userInput=${context.userInput}', 'color: #0000FF;`);
+    //debug && console.log(`%ccontext.userInput=${context.userInput}`, 'color: #0000FF;');
     
-
     try {
       if (!context.client) {
         throw new Error('Anthropic client is not initialized.');
@@ -50,28 +49,23 @@ export const AgentProcessStateConfig: StateConfig<MachineStates, MachineContext>
 
       for (const block of message.content) {
         if (block.type === 'tool_use') {
-          console.log('%c\nTool use detected:', 'color: #FF00FF;');
-          console.log(block);
+          //console.log('%c\nTool use detected:', 'color: #FF00FF;');
+          //console.log(block);
           const toolName = block.name;
           const toolInput = block.input;
           const toolId = block.id;
 
           if (toolName === 'get_weather_forecast') {
-            console.log('%c\nWeather tool detected:', 'color: #FF00FF;');
-            console.log(toolInput);
-            const input = toolInput as { zipcode: string };
+            console.log('%c\nClaude: ', 'color: #00FFFF;', 'Please wait while I retrieve the weather forecast...');
+            //console.log('%c\nWeather tool detected:', 'color: #FF00FF;');
+            //console.log(toolInput);
+            const input = toolInput as { latitude: number, longitude: number };
             const weatherForecast = await getWeatherForecast(input);
-            console.log('%c\nWeather forecast:', 'color: #FF00FF;');
-            console.log(weatherForecast);
-            // context.messages.push({
-            //    role: 'user',
-            //    content: weatherForecast,
-               
-            //  });
-            //context.userInput = weatherForecast; // Update userInput with the weather forecast response
-
+            //console.log('%c\nWeather forecast:', 'color: #FF00FF;');
+            //console.log(weatherForecast);
+            
+            // make better prompt instructiuons
             context.userInput = `Please summarize this weather forecast: ${weatherForecast}`; // Update userInput with the weather forecast response
-
             return { transitionTo: 'AgentProcess', context };
           } else {
             console.log(`%c\nUnknown tool detected: ${toolName}`, 'color: #FFFF00;');
