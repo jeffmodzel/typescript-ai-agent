@@ -3,7 +3,7 @@ import { MachineContext, MachineStates } from './machine_configuration.ts';
 import { getResponseText } from './anthropic_helpers.ts';
 import { weatherTool, getWeatherForecast } from './tools.ts';
 
-const debug = true;
+const debug = false;
 
 export const AgentProcessStateConfig: StateConfig<MachineStates, MachineContext> = {
   onEnter: async (context) => {

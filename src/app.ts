@@ -8,7 +8,7 @@ import { CLAUDE_3_5_HAIKU_LATEST } from './anthropic_helpers.ts';
 
 if (import.meta.main) {
   console.log(import.meta.filename);
-  const debug = true;
+  const debug = false;
   const machine = new SequentialStateMachine<MachineStates, MachineContext>('Initialize');
   const initialContext: MachineContext = { userInput: '', messages: [], claudeModel: CLAUDE_3_5_HAIKU_LATEST };
 
